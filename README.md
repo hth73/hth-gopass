@@ -26,7 +26,7 @@ gopass ist ein git-basierter Passwortmanager, der auf dem Unix-Tool "pass" aufba
 
 ---
 
-### Gopass installation
+### Gopass installation (Admin/Member)
 ```bash
 ## pre-installation steps
 sudo apt update
@@ -44,7 +44,7 @@ gopass -v
 gopass 1.16.1 (b2fb8ba9) go1.25.5 linux amd64
 ```
 
-### Einen neuen GPG-Schlüssel erstellen
+### Einen neuen GPG-Schlüssel erstellen (Admin/Member)
 Hier wird gezeigt, wie ein GPG-Key erstellt wird. Dieser wird später benötigt, um Secrets in "gopass" zu verschlüsseln und zu entschlüsseln.<br>
 Für den Einsatz im Team sollte initial eine Person die Grundkonfiguration von "gopass" übernehmen (Repository, Struktur, erste Schlüssel). Sobald das Setup steht, können weitere Teammitglieder über ihre GPG-Keys hinzugefügt oder entfernt werden.
 
@@ -86,7 +86,7 @@ gpg --list-public-keys
 # sub   cv25519 2026-04-09 [E]
 ```
 
-### Gopass initial einrichten und mit Repo syncen
+### Gopass initial einrichten und mit Repo syncen (Admin)
 ```bash
 ## Lokalen Passwort Store anlegen
 ##
@@ -115,7 +115,7 @@ ls -la /home/${USER}/.local/share/gopass/stores/root
 # drwx------ 3 ${USER} ${USER} 4096 Apr  9 12:29 ..
 ```
 
-### Gopass Struktur anlegen
+### Gopass Struktur anlegen (Admin)
 Die Struktur der Verzeichnisse in "gopass" bestimmt direkt das RBAC-Modell.<br>
 Berechtigungen werden über ".gpg-id" Dateien pro Verzeichnis definiert und gelten rekursiv für alle darunterliegenden Secrets.
 ```bash
@@ -137,7 +137,7 @@ gopass sync
 # ✅ All done
 ```
 
-### Team-Member berechtigen
+### Team-Member berechtigen (Admin/Member)
 Um Teammitglieder zur "gopass"-Struktur hinzuzufügen, wird der öffentliche GPG-Key jedes Benutzers benötigt. Dieser wird vom jeweiligen Nutzer exportiert und dem Administrator bereitgestellt.<br>
 Der Administrator importiert die Public Keys, ergänzt sie in der entsprechenden ".gpg-id" und verschlüsselt die betroffenen Secrets neu, sodass die neuen Mitglieder Zugriff erhalten.
 ```bash
@@ -212,9 +212,50 @@ ls -la .public-keys/
 # -rw------- 1 hth hth  673 Apr  9 21:27 clara.korn@htdom.local
 ```
 
-### RBAC-Konzept auf Nutzer anwenden
+### Gopass bei dem Team-Member einrichten (Member)
+```bash
+## Initial ein gopass init durchführen
+##
+gopass init
+# 🍭 Initializing a new password store ...
+# ...
+# 🏁 Password store /home/hth/.local/share/gopass/stores/root initialized for:
+# 📩 0xCB7796F9F1574D76 - Clara Korn (gopass gpg key) <clara.korn@htdom.local>
+
+## Gopass Git Repository clonen
+##
+gopass clone --path /home/${USER}/.gopass-store git@github.com:hth73/hth-gopass.git store --sync gitcli
+
+# 🌟 Welcome to gopass!
+# 🌟 Cloning an existing password store from "git@github.com:hth73/hth-gopass.git" ...
+# ...
+
+# 🚶 What is your name? [hth]: Clara Korn
+# 📧 What is your email? [you@example.com]: clara.korn@htdom.local
+# ⚠ Failed to commit .gitattributes to git
+
+
+## Initiale Sync und alle vorhandenen GPG Public Keys der anderen Nutzer importieren.
+gopass sync
+# 🚥 Syncing with all remotes ...
+# [<root>] 
+#    gitfs pull and push ... Skipped (no remote)
+# [--sync] 
+OK (no changes)Do you want to import the public key "0xDFB297D217BDA107" (Names: [Helmut Thurnhofer <hth@hthom.local>]) into your keyring? [y/N/q]: y
+# Imported public key for 0xDFB297D217BDA107 into Keyring
+#    done
+# ✅ All done
+
+gopass list -f
+gopass store/infra/dev/web/web01.dev.htdom.local/cred
+# username: root
+# password: dev
+```
+
+### RBAC-Konzept auf Nutzer anwenden (Admin)
 Soll der Zugriff auf bestimmte Bereiche der "gopass"-Struktur eingeschränkt werden, erfolgt dies über das RBAC-Konzept mittels ".gpg-id" Dateien. Diese definieren die erlaubten GPG-Identitäten pro Verzeichnis.<br>
-Nach Änderungen an den Berechtigungen ist ein Re-Encrypt der Secrets erforderlich, damit die neuen Zugriffsrechte angewendet werden.
+Nach Änderungen an den Berechtigungen ist ein Re-Encrypt der Secrets erforderlich, damit die neuen Zugriffsrechte angewendet werden.<br><br>
+WICHTIG ist hier, damit dies funktioniert. Das aus der Root ".gpg-id" die betroffenen Nutzer entfernt werden.
 ```bash
 ## Die 
 vi infra/dev/.gpg-id
@@ -224,10 +265,10 @@ vi infra/share/fileshare/.gpg-id
 # clara.korn@htdom.local
 
 ## Hier kann man nochmal überprüfen, wer auf was Zugriff hat
+## Über die Root .gpg-id sollten dann auch nur noch die Administratoren Zufriff haben!
 gopass recipients
 # gopass
 # ├── 0xDFB297D217BDA107 - Helmut Thurnhofer <hth@htdom.local>
-# ├── clara.korn@htdom.local => 0xCB7796F9F1574D76 - Clara Korn (gopass gpg key) <clara.korn@htdom.local>
 # └── infra/
 #     ├── dev/
 #     │   └── clara.korn@htdom.local => 0xCB7796F9F1574D76 - Clara Korn (gopass gpg key) <clara.korn@htdom.local>
@@ -262,10 +303,36 @@ gopass sync
 # ✅ All done
 ```
 
-### Das Zugriffsverhalten sieht nun wie folgt aus
+### Das Zugriffsverhalten sieht nun wie folgt aus (Admin/Member)
 ```bash
 
+## Hier kann man sich die Struktur in Listenform ausgeben lassen
+gopass list -f
+store/infra/dev/database/db01.dev.htdom.local/db_dev/cred
+store/infra/dev/web/web01.dev.htdom.local/cred
+store/infra/pro/database/db01.htdom.local/db_pro/cred
+store/infra/pro/web/web01.htdom.local/cred
+store/infra/share/fileshare/filesrv01.htdom.local/cred
+store/infra/share/intranet/intra.htdom.local/cred
+
+## Auf dieses Secret hat der Benutzer dank RBAC Zugriff
+##
+gopass show store/infra/dev/database/db01.dev.htdom.local/db_dev/cred
+# Secret: store/infra/dev/database/db01.dev.htdom.local/db_dev/cred
+# username: root
+# password: dev
+
+## Auf dieses Secret hat der Benutzer dank RBAC keinen Zugriff mehr
+##
+gopass show store/infra/pro/database/db01.htdom.local/db_pro/cred
+# ...
+# ❌ Decryption failed: exit status 2
+# Error: failed to retrieve secret "store/infra/pro/database/db01.htdom.local/db_pro/cred": failed to decrypt
+
+## Der Administrator hat über die Root ".gpg-id" weiterhin Zugriff
+##
+gopass show infra/pro/database/db01.htdom.local/db_pro/cred 
+# Secret: infra/pro/database/db01.htdom.local/db_pro/cred
+# username: sa
+# password: pro
 ```
-
-
-
