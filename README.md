@@ -116,7 +116,7 @@ ls -la /home/${USER}/.local/share/gopass/stores/root
 ```
 
 ### Gopass Struktur anlegen
-Die Struktur der Verzeichnisse in „gopass“ bestimmt direkt das RBAC-Modell.<br>
+Die Struktur der Verzeichnisse in "gopass" bestimmt direkt das RBAC-Modell.<br>
 Berechtigungen werden über ".gpg-id" Dateien pro Verzeichnis definiert und gelten rekursiv für alle darunterliegenden Secrets.
 ```bash
 ## Meine Beispiel Struktur
@@ -135,6 +135,81 @@ gopass sync
 # OK (no changes)
 #    done
 # ✅ All done
+```
+
+### Team-Member berechtigen
+Um Teammitglieder zur "gopass"-Struktur hinzuzufügen, wird der öffentliche GPG-Key jedes Benutzers benötigt. Dieser wird vom jeweiligen Nutzer exportiert und dem Administrator bereitgestellt.<br>
+Der Administrator importiert die Public Keys, ergänzt sie in der entsprechenden ".gpg-id" und verschlüsselt die betroffenen Secrets neu, sodass die neuen Mitglieder Zugriff erhalten.
+```bash
+## Aufgabe vom jeweiligen Nutzer
+gpg --armor --export clara.korn@htdom.local ~/gopass_public-key.asc
+cat ~/gopass_public-key.asc
+
+# -----BEGIN PGP PUBLIC KEY BLOCK-----
+# mDMEadfCcxYJKwYBBAHaRw8BAQdAef0HPxwucioH0ciS2bcmvCgwApFhpOZELJS5
+# ...
+# LAIvAQ==
+# -----END PGP PUBLIC KEY BLOCK-----
+
+# ---
+
+## Aufgabe vom Administrator
+gpg --import ~/clara-korn_public-key.asc
+
+## Der Public Key des jeweiligen Nutzers muss vertraut werden [siehe unknown]
+##
+gpg --list-public-keys
+
+# ...
+# 05F2E46818F29FDD88C78301CB7796F9F1574D76
+# uid [unknown] Clara Korn (gopass gpg key) <clara.korn@htdom.local>
+
+gpg --edit-key 05F2E46818F29FDD88C78301CB7796F9F1574D76
+gpg> lsign
+
+# Are you sure that you want to sign this key with your
+# key "Helmut Thurnhofer <hth@hthom.local>" (DFB127D314BDA507)
+Really sign? (y/N) y
+
+gpg> trust
+# Please decide how far you trust this user to correctly verify other users' keys
+# (by looking at passports, checking fingerprints from different sources, etc.)
+# ...
+5 = I trust ultimately
+
+Your decision? 5
+Do you really want to set this key to ultimate trust? (y/N) y
+
+gpg> save
+
+gpg --list-public-keys
+
+# ...
+# 05F2E46818F29FDD88C78301CB7796F9F1574D76
+# uid [ultimate] Clara Korn (gopass gpg key) <clara.korn@htdom.local>
+
+## Public Key des jeweiligen Nutzers gopass hinzufügen
+gopass recipients add clara.korn@htdom.local
+# Do you want to add "0xCB7796F9F1574D76 - Clara Korn (gopass gpg key) <clara.korn@htdom.local>" (key "clara.korn@htdom.local") as a recipient to the store ""? [y/N/q]: y
+# Reencrypting existing secrets. This may take some time ...
+# Starting reencrypt
+] 5 / 5 [Goooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooopass] 100.00% 
+# Added 1 recipients
+# You need to run 'gopass sync' to push these changes
+
+gopass sync
+
+# ---
+
+## Die Public Keys der jeweiligen Benutzer werden dann in folgende Struktur abgelegt. 
+## Die Datei ".gpg-id" ist für spätere RBAC konfigurationen wichtig!
+cat /home/${USER}/.gopass-store/.gpg-id 
+# 0xDFB297D217BDA107
+# clara.korn@htdom.local
+
+ls -la .public-keys/
+# -rw------- 1 hth hth  656 Apr  9 17:38 0xDFB297D217BDA107
+# -rw------- 1 hth hth  673 Apr  9 21:27 clara.korn@htdom.local
 ```
 
 
