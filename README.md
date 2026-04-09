@@ -212,4 +212,60 @@ ls -la .public-keys/
 # -rw------- 1 hth hth  673 Apr  9 21:27 clara.korn@htdom.local
 ```
 
+### RBAC-Konzept auf Nutzer anwenden
+Soll der Zugriff auf bestimmte Bereiche der "gopass"-Struktur eingeschränkt werden, erfolgt dies über das RBAC-Konzept mittels ".gpg-id" Dateien. Diese definieren die erlaubten GPG-Identitäten pro Verzeichnis.<br>
+Nach Änderungen an den Berechtigungen ist ein Re-Encrypt der Secrets erforderlich, damit die neuen Zugriffsrechte angewendet werden.
+```bash
+## Die 
+vi infra/dev/.gpg-id
+# clara.korn@htdom.local
+
+vi infra/share/fileshare/.gpg-id 
+# clara.korn@htdom.local
+
+## Hier kann man nochmal überprüfen, wer auf was Zugriff hat
+gopass recipients
+# gopass
+# ├── 0xDFB297D217BDA107 - Helmut Thurnhofer <hth@htdom.local>
+# ├── clara.korn@htdom.local => 0xCB7796F9F1574D76 - Clara Korn (gopass gpg key) <clara.korn@htdom.local>
+# └── infra/
+#     ├── dev/
+#     │   └── clara.korn@htdom.local => 0xCB7796F9F1574D76 - Clara Korn (gopass gpg key) <clara.korn@htdom.local>
+#     └── share/
+#         └── fileshare/
+#             └── clara.korn@htdom.local => 0xCB7796F9F1574D76 - Clara Korn (gopass gpg key) <clara.korn@htdom.local>
+
+
+## Und mit folgenden Befehl werden alle Secrets neu verschlüsselt
+## Die letzten drei Secrets in den Beispiel führen den GPG-Key des Administrator auf, der ist nicht expliziet in den zuvor angelegten ".gpg-id" aufgeführt
+## Da dieser die Berechtigungen aus dem Root Ordner verwerbt bekommt.
+##
+gopass fsck --decrypt
+# Checking password store integrity ...
+# ...  
+# [] Re-encrypting infra/share/fileshare/filesrv01.htdom.local/cred to fix recipients and storage format. [leaf store]
+# ] 6 / 7 [Goooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooopass                          ]  85.71% 
+# [] Re-encrypting infra/share/intranet/intra.htdom.local/cred to fix storage format. [leaf store]
+
+# [] ⚠ failed to check "infra/dev/database/db01.dev.htdom.local/db_dev/cred":
+#     [non-fatal] extra recipients on infra/dev/database/db01.dev.htdom.local/db_dev/cred: [02E31CBE...BDA205]
+# failed to check "infra/dev/web/web01.dev.htdom.local/cred":
+#     [non-fatal] extra recipients on infra/dev/web/web01.dev.htdom.local/cred: [02E31CBE...BDA205]
+# failed to check "infra/share/fileshare/filesrv01.htdom.local/cred":
+#     [non-fatal] extra recipients on infra/share/fileshare/filesrv01.htdom.local/cred: [02E31CBE...BDA205]
+
+gopass sync
+# 🚥 Syncing with all remotes ...
+# [<root>] 
+#    gitfs pull and push ... OK (no changes)
+#    done
+# ✅ All done
+```
+
+### Das Zugriffsverhalten sieht nun wie folgt aus
+```bash
+
+```
+
+
 
