@@ -336,3 +336,27 @@ gopass show infra/pro/database/db01.htdom.local/db_pro/cred
 # username: sa
 # password: pro
 ```
+
+### Zusatzinformation
+```bash
+## Manchmal möchte man in gopass auch MFAs hinterlegen und diese bei Bedarf wieder abfragen.
+## kostenloser TOTP Token Generator - https://totp.danhersam.com
+##
+gopass insert -m infra/internet/mysite/mfa
+
+# Pa$$w0rd2026!
+# ---
+# totp: 'JBSWY3DPEHPK3PXP'
+# url: https://totp.danhersam.com/
+# username: foobar
+
+## MFA Token auf der Konsole abfragen (mit Timer)
+gopass totp infra/internet/mysite/mfa
+# 388793
+# ⚠ ([q] to stop. -o flag to avoid.) This OTP password still lasts for:
+# ]  3 / 19 [Gooooooooooooooooooooooopass]  15.79% 
+
+## MFA Token auf der Konsole abfragen (ohne Timer mit dem Schalter -o)
+gopass totp -o infra/internet/mysite/mfa
+# 388793
+```
