@@ -1,6 +1,10 @@
 # Gopass Passwortmanager für das Team
 
-<img src="https://img.shields.io/badge/Ubuntu-fd712f?logo=ubuntu&logoColor=white&style=flat" /> <img src="https://img.shields.io/badge/Bash-3e484d?logo=gnu-bash&logoColor=white&style=flat" /> <img src="https://img.shields.io/badge/gopass-58d7e3?style=flat&logo=gnuprivacyguard&logoColor=white&style=flat" />
+<p>
+  <img src="images/gopass.png" width="50%" height="50%" />
+</p>
+
+<img src="https://img.shields.io/badge/Ubuntu-fd712f?logo=ubuntu&logoColor=white&style=flat" /> <img src="https://img.shields.io/badge/Git-F03C2E?logo=git&logoColor=white&style=flat" /> <img src="https://img.shields.io/badge/GnuPG-0093DD?logo=gnuprivacyguard&logoColor=white&style=flat" /> <img src="https://img.shields.io/badge/gopass-58d7e3?style=flat&logo=gnuprivacyguard&logoColor=white&style=flat" /> <img src="https://img.shields.io/badge/Bash-3e484d?logo=gnu-bash&logoColor=white&style=flat" />
 
 ---
 ## Beschreibung
